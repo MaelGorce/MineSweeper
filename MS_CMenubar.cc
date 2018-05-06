@@ -2,14 +2,15 @@
 #include "MS_CConfiguration.hh"
 #include "MS_Traces.hh"
 
-CMenuBar::CMenuBar(QWidget *parent) : QMenuBar(parent)
+CMenuBar::CMenuBar(QWidget *parent) : QMenuBar(parent),
+  m_uiLenght(0)
 {
     trace_debug("Construction of CMenuBar");
 
     fnCreateActions();
     fnCreateMenus();
 
-    this->setMinimumWidth(C_WINDOW_LENGTH);
+    this->setMinimumWidth(m_uiLenght);
 
     trace_debug("End Construction of CMenuBar");
 }
@@ -25,6 +26,12 @@ CMenuBar::~CMenuBar()
     }
 
     trace_debug("End Destruction of CMenuBar");
+}
+
+void CMenuBar::fnSetLength(uint32_t uiLenght)
+{
+    m_uiLenght = uiLenght;
+    this->setMinimumWidth(m_uiLenght);
 }
 
 void CMenuBar::fnCreateActions()

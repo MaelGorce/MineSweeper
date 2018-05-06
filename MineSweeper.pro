@@ -27,10 +27,15 @@ SOURCES += \
     MS_Main.cc \
     MS_CMainwindow.cc \
     MS_CMenubar.cc \
-    MS_CConfiguration.cc
+    MS_CConfiguration.cc \
+    MS_CSquare.cc
 
 HEADERS += \
     MS_CMainwindow.hh \
     MS_CMenubar.hh \
     MS_Traces.hh \
-    MS_CConfiguration.hh
+    MS_CConfiguration.hh \
+    MS_CSquare.hh
+
+FORMS += \
+    preferencesdialog.ui
