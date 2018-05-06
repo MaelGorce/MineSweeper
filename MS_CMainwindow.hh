@@ -15,14 +15,21 @@ public:
     ~CMainWindow();
 
 public slots:
-    void SfnInMenuBar(EMenuBarPossibility);
+    void SlotInMenuBar(EMenuBarPossibility);
+    void SlotGameLoss();
+    void SlotRevelation();
+    void SlotFlaggation();
 
 private:
     void fnDeleteOldGrid();
     void fnCreateGrid();
     void fnSetSizeFromConfiguration();
     void fnRamdomBombImplant();
+    void fnCheckWin();
+    void fnWin();
 
+    uint32_t m_uiRevealedSquares;
+    uint32_t m_uiFlaggedSquares;
     CMenuBar* m_poMenuBar;
     uint32_t m_uiHightMenuBar;
     CConfiguration* m_poConfiguration;

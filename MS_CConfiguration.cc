@@ -5,9 +5,9 @@
 CConfiguration::CConfiguration()
 {
     // Default values
-    m_uiNumberOfRow = 10;
-    m_uiNumberOfColumn = 12;
-    m_uiNumberOfMines = 20;
+    m_uiNumberOfRow = 40;
+    m_uiNumberOfColumn = 50;
+    m_uiNumberOfMines = 300;
     fnDump();
 }
 

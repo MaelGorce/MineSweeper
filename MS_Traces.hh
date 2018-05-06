@@ -11,7 +11,7 @@ typedef enum ETraceLevelE
     E_TRACE_DEBUG,
 } ETraceLevel;
 
-static ETraceLevel g_eTraceLevel = E_TRACE_DEBUG;
+static ETraceLevel g_eTraceLevel = E_TRACE_INFO;
 #define trace_error( fmt  )  if (g_eTraceLevel >= E_TRACE_ERROR)     {qDebug() << "(*) error   | "<<__FILE__<<" : "<<__FUNCTION__<<"( l."<<__LINE__<<") ~"<<fmt;}
 #define trace_warning(fmt )  if (g_eTraceLevel >= E_TRACE_WARNING)   {qDebug() << "($) warning | "<<__FILE__<<" : "<<__FUNCTION__<<"( l."<<__LINE__<<") ~"<<fmt;}
 #define trace_info(fmt    )  if (g_eTraceLevel >= E_TRACE_INFO)      {qDebug() << "(!) info    | "<<__FILE__<<" : "<<__FUNCTION__<<"( l."<<__LINE__<<") ~"<<fmt;}

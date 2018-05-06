@@ -37,5 +37,4 @@ HEADERS += \
     MS_CConfiguration.hh \
     MS_CSquare.hh
 
-FORMS += \
-    preferencesdialog.ui
+FORMS +=

@@ -80,8 +80,7 @@ void CSquare::fnTry()
         if (m_bIsBomb)
         {
             trace_debug("IT'S A BOMB");
-            this->setText("*");
-            this->show();
+            fnColouringRevelation();
             emit SigExplosion();
         }
         else
@@ -97,28 +96,42 @@ void CSquare::fnTry()
 
 void CSquare::fnFlag()
 {
-    trace_debug("Flagging [" << m_uiXPos << "][" << m_uiYPos << "]");
+    trace_info("Flagging [" << m_uiXPos << "][" << m_uiYPos << "]");
+    emit SigFlagged();
+
     this->setText("F");
+    this->show();
 }
 
+void CSquare::fnfreeze()
+{
+    // little trick: it won't try as it's reveal
+    m_bIsRevealed = true;
+    // Reveal all the bombs
+    if (m_bIsBomb)
+    {
+        fnColouringRevelation();
+    }
+}
 void CSquare::fnDistantTry()
 {
     trace_debug("Distant Trying [" << m_uiXPos << "][" << m_uiYPos << "]");
-    if (m_bIsBomb)
+    if (!m_bIsBomb)
     {
-        trace_debug("IT'S A BOMB");
-    }
-    else
-    {
+        // Reveal only if it's not a bomb
         fnRevealAndDistantSearch();
     }
 }
 
 void CSquare::fnRevealAndDistantSearch()
 {
+    // Revealing itself
     m_bIsRevealed= true;
+    emit SigRevealed();
     trace_debug("Number of surronding bombs : " << m_uiNbOfSurrondingBomb);
     fnColouringRevelation();
+
+    // Distant Searhing In neighboors if there is no surronding bomb
     if (!m_uiNbOfSurrondingBomb)
     {
         for(int iI=0; iI < C_NB_OF_NEIGHBORS;iI++)
@@ -139,21 +152,28 @@ void CSquare::fnColouringRevelation()
     QPalette oPalette;
     QFont oFont;
 
-    this->setAutoFillBackground(true);
-    this->setFlat(true);
+    if (!m_bIsBomb)
+    {
+        //If it's not a bomb : show the number of surronding bombs
+        this->setAutoFillBackground(true);
+        this->setFlat(true);
 
-    oPalette = this->palette();
-    oPalette.setColor(QPalette::Button,oColorRevealedBackground);
-    oPalette.setColor(QPalette::ButtonText,poColorRevealedText[m_uiNbOfSurrondingBomb]);
-    this->setPalette(oPalette);
+        oPalette = this->palette();
+        oPalette.setColor(QPalette::Button,oColorRevealedBackground);
+        oPalette.setColor(QPalette::ButtonText,poColorRevealedText[m_uiNbOfSurrondingBomb]);
+        this->setPalette(oPalette);
+
+        this->setText(QString::number(m_uiNbOfSurrondingBomb));
+    }
+    else
+    {
+        // it's a bomb then
+        this->setText("*");
+    }
 
     oFont = this->font();
     oFont.setBold(true);
     oFont.setPointSize(C_POINT_SIZE);
     this->setFont(oFont);
-
-    this->setText(QString::number(m_uiNbOfSurrondingBomb));
-
-
     this->show();
 }

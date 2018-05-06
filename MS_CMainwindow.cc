@@ -13,7 +13,7 @@ CMainWindow::CMainWindow(QWidget *parent)
 
     m_poMenuBar = new CMenuBar(this);
     connect(m_poMenuBar,&CMenuBar::SigOutMenuBar,
-            this,&CMainWindow::SfnInMenuBar);
+            this,&CMainWindow::SlotInMenuBar);
     m_uiHightMenuBar = m_poMenuBar->height();
     trace_debug("Hight of Menu Bar : " << m_uiHightMenuBar);
 
@@ -65,6 +65,9 @@ void CMainWindow::fnCreateGrid()
         for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
         {
             m_poGrid[iI][iJ] = new CSquare(iI,iJ,m_pbBombGrid[iI][iJ],m_uiHightMenuBar,this);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigExplosion,this,&CMainWindow::SlotGameLoss);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigRevealed,this,&CMainWindow::SlotRevelation);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigFlagged,this,&CMainWindow::SlotFlaggation);
         }
     }
 
@@ -99,6 +102,10 @@ void CMainWindow::fnCreateGrid()
             m_poGrid[iI][iJ]->show();
         }
     }
+
+    m_uiRevealedSquares = 0;
+    m_uiFlaggedSquares = 0;
+
     trace_debug("End of the grid creation");
 }
 
@@ -153,7 +160,7 @@ void CMainWindow::fnSetSizeFromConfiguration()
     m_poMenuBar->fnSetLength(uiLength);
 }
 
-void CMainWindow::SfnInMenuBar(EMenuBarPossibility eInputMenuBar)
+void CMainWindow::SlotInMenuBar(EMenuBarPossibility eInputMenuBar)
 {
     switch (eInputMenuBar)
     {
@@ -202,5 +209,58 @@ You don't have to mark all the bombs to win; you just need to open all non-bomb 
             break;
         default:
             trace_debug("Case " << eInputMenuBar << " causes no action here");
+    }
+}
+
+void CMainWindow::SlotGameLoss()
+{
+    uint32_t uiNumberOfColumn = m_poOldConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poOldConfiguration->fnGetNumberOfRow();
+    trace_info("Game lost");
+    // Freeze the squares
+    for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
+    {
+        for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
+        {
+            m_poGrid[iI][iJ]->fnfreeze();
+        }
+    }
+}
+
+void CMainWindow::SlotRevelation()
+{
+    ++m_uiRevealedSquares;
+    trace_debug("Squares revealed : " << m_uiRevealedSquares);
+    fnCheckWin();
+}
+
+void CMainWindow::SlotFlaggation()
+{
+    ++m_uiFlaggedSquares;
+    trace_debug("Squares Flagged : " << m_uiFlaggedSquares);
+    fnCheckWin();
+}
+
+void  CMainWindow::fnCheckWin()
+{
+    if(m_uiRevealedSquares == \
+            (m_poOldConfiguration->fnGetNumberOfRow()*m_poOldConfiguration->fnGetNumberOfColumn()-m_poOldConfiguration->fnGetNumberOfMines()))
+    {
+        fnWin();
+    }
+}
+
+void  CMainWindow::fnWin()
+{
+    uint32_t uiNumberOfColumn = m_poOldConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poOldConfiguration->fnGetNumberOfRow();
+    trace_info("Game Won !");
+    // Freeze the squares
+    for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
+    {
+        for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
+        {
+            m_poGrid[iI][iJ]->fnfreeze();
+        }
     }
 }
