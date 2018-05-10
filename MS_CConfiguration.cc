@@ -46,7 +46,6 @@ int CConfiguration::fnConfigure(QWidget *parent)
     uint32_t uiHorizontalOffset = C_PREFERENCES_MARGIN;
     trace_debug("Configuation");
     // Opening a Message Box to choose preferences
-    Qt::WindowFlags oFlag = Qt::Dialog;//Qt::Dialog | Qt::WindowType_Mask;
     QMessageBox *poQPreferencesBox = new QMessageBox(QMessageBox::NoIcon,
                                               "Preferences",
                                               "",

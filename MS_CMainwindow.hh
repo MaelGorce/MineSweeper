@@ -5,6 +5,7 @@
 #include "MS_CMenubar.hh"
 #include "MS_CSquare.hh"
 #include "MS_CConfiguration.hh"
+#include "MS_CInformationbar.hh"
 
 class CMainWindow : public QMainWindow
 {
@@ -19,6 +20,12 @@ public slots:
     void SlotGameLoss();
     void SlotRevelation();
     void SlotFlaggation();
+    void SlotUnFlaggation();
+
+signals:
+    void SigSupposedMinesLeft(int32_t);
+    void SigResetTimer();
+    void SigStopTimer();
 
 private:
     void fnDeleteOldGrid();
@@ -32,6 +39,8 @@ private:
     uint32_t m_uiFlaggedSquares;
     CMenuBar* m_poMenuBar;
     uint32_t m_uiHightMenuBar;
+    CInformationBar* m_poInfoBar;
+    uint32_t m_uiHightInfoBar;
     CConfiguration* m_poConfiguration;
     CSquare* m_poGrid[C_MAX_SIZE_NUMBER][C_MAX_SIZE_NUMBER];
     bool m_pbBombGrid[C_MAX_SIZE_NUMBER][C_MAX_SIZE_NUMBER];

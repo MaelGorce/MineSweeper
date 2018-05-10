@@ -24,6 +24,8 @@ CSquare::CSquare(uint32_t uiXPos, uint32_t uiYPos, bool bIsBomb, uint32_t uiVert
     m_uiYPos(uiYPos),
     m_bIsBomb(bIsBomb),
     m_bIsRevealed(false),
+    m_bIsFlagged(false),
+    m_bIsQuestionMarked(false),
     m_uiNbOfSurrondingBomb(0)
 {
     trace_debug("Construction of square [" << m_uiXPos << "][" << m_uiYPos << "]");
@@ -73,19 +75,29 @@ void CSquare::fnSetNeighborhoodInfos(CSquare** poNeighborhood)
     }
 }
 
-bool CSquare::fnIsBomb()
+bool CSquare::fnIsBomb()const
 {
     return m_bIsBomb;
 }
 
-bool CSquare::fnIsRevealed()
+bool CSquare::fnIsRevealed()const
 {
     return m_bIsRevealed;
 }
 
+bool CSquare::fnIsFlagged()const
+{
+    return m_bIsFlagged;
+}
+
+bool CSquare::fnIsQuestionMarked()const
+{
+    return m_bIsQuestionMarked;
+}
+
 void CSquare::fnTry()
 {
-    if (!m_bIsRevealed)
+    if (!m_bIsRevealed && !m_bIsFlagged && !m_bIsFlagged)
     {
         trace_debug("Trying [" << m_uiXPos << "][" << m_uiYPos << "]");
         if (m_bIsBomb)
@@ -109,17 +121,37 @@ void CSquare::fnTry()
     }
     else
     {
-        trace_debug("Already revealed [" << m_uiXPos << "][" << m_uiYPos << "]");
+        trace_info("Already revealed or flagged [" << m_uiXPos << "][" << m_uiYPos << "]");
     }
 }
 
 void CSquare::fnFlag()
 {
-    trace_info("Flagging [" << m_uiXPos << "][" << m_uiYPos << "]");
-    emit SigFlagged();
+    if (!m_bIsRevealed && !m_bIsFlagged)
+    {
+        trace_info("Flagging [" << m_uiXPos << "][" << m_uiYPos << "]");
+        emit SigFlagged();
+        m_bIsFlagged = true;
+        this->setText("F");
+        this->show();
+    }
+    else if (m_bIsFlagged)
+    {
+        trace_info("Question Marking [" << m_uiXPos << "][" << m_uiYPos << "]");
+        emit SigUnFlagged();
+        m_bIsFlagged = false;
+        m_bIsQuestionMarked = true;
+        this->setText("?");
+        this->show();
+    }
+    else if (m_bIsQuestionMarked)
+    {
+        trace_info("UnQuestion Marking [" << m_uiXPos << "][" << m_uiYPos << "]");
+        m_bIsQuestionMarked = false;
+        this->setText("");
+        this->show();
+    }
 
-    this->setText("F");
-    this->show();
 }
 
 void CSquare::fnfreeze()
@@ -127,10 +159,7 @@ void CSquare::fnfreeze()
     // little trick: it won't try as it's reveal
     m_bIsRevealed = true;
     // Reveal all the bombs
-    if (m_bIsBomb)
-    {
-        fnColouringRevelation();
-    }
+    fnFinalColouringRevelation();
 }
 void CSquare::fnDistantTry()
 {
@@ -157,7 +186,7 @@ void CSquare::fnRevealAndDistantSearch()
         {
             if (m_poNeighborhood[iI]!= nullptr)
             {
-                if ( !m_poNeighborhood[iI]->fnIsBomb() && !m_poNeighborhood[iI]->fnIsRevealed())
+                if ( !m_poNeighborhood[iI]->fnIsBomb() && !m_poNeighborhood[iI]->fnIsRevealed() && !m_poNeighborhood[iI]->fnIsFlagged())
                 {
                     m_poNeighborhood[iI]->fnDistantTry();
                 }
@@ -192,3 +221,36 @@ void CSquare::fnColouringRevelation()
 
     this->show();
 }
+
+void CSquare::fnFinalColouringRevelation()
+{
+    QPalette oPalette;
+    QFont oFont;
+
+    if (m_bIsFlagged)
+    {
+        if (m_bIsBomb)
+        {
+            // It wa really a bomb then green
+            oPalette = this->palette();
+            oPalette.setColor(QPalette::ButtonText,Qt::green);
+            this->setPalette(oPalette);
+        }
+        else
+        {
+            // It was not a bomb then red
+            oPalette = this->palette();
+            oPalette.setColor(QPalette::ButtonText,Qt::red);
+            this->setPalette(oPalette);
+        }
+    }
+    if (m_bIsBomb)
+    {
+        // it's a bomb and it wasn't flagged
+        this->setText("*");
+    }
+
+    this->show();
+}
+
+

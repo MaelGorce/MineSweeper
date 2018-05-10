@@ -7,9 +7,9 @@
 
 #define C_SIZE_SQUARE 24
 #define C_POINT_SIZE C_SIZE_SQUARE / 2
+#define C_MAX_SIZE_NUMBER 32
 
-#define C_MAX_SIZE_NUMBER 50
-#define C_MAX_BOMB_NUMBER 20
+#define C_INFO_BAR_HIGHT 50
 
 enum EConfigurationPossibility
 {

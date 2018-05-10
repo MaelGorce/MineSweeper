@@ -15,9 +15,21 @@ CMainWindow::CMainWindow(QWidget *parent)
     m_uiHightMenuBar = m_poMenuBar->height();
     trace_debug("Hight of Menu Bar : " << m_uiHightMenuBar);
 
+    m_poInfoBar = new CInformationBar(m_uiHightMenuBar,this);
+    connect(this,&CMainWindow::SigSupposedMinesLeft,
+            m_poInfoBar,&CInformationBar::SlotSupposedMinesLeft);
+    connect(this,&CMainWindow::SigResetTimer,
+            m_poInfoBar,&CInformationBar::SlotResetTimer);
+    connect(this,&CMainWindow::SigStopTimer,
+            m_poInfoBar,&CInformationBar::SlotStopTimer);
+
+    m_uiHightInfoBar = C_INFO_BAR_HIGHT;
+
     fnSetSizeFromConfiguration();
 
     fnCreateGrid();
+
+    fnSetSizeFromConfiguration();
 
     trace_debug("End Construction of MainWindow");
 }
@@ -62,10 +74,11 @@ void CMainWindow::fnCreateGrid()
     {
         for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
         {
-            m_poGrid[iI][iJ] = new CSquare(iI,iJ,m_pbBombGrid[iI][iJ],m_uiHightMenuBar,this);
+            m_poGrid[iI][iJ] = new CSquare(iI,iJ,m_pbBombGrid[iI][iJ],m_uiHightMenuBar+m_uiHightInfoBar,this);
             QObject::connect(m_poGrid[iI][iJ],&CSquare::SigExplosion,this,&CMainWindow::SlotGameLoss);
             QObject::connect(m_poGrid[iI][iJ],&CSquare::SigRevealed,this,&CMainWindow::SlotRevelation);
             QObject::connect(m_poGrid[iI][iJ],&CSquare::SigFlagged,this,&CMainWindow::SlotFlaggation);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigUnFlagged,this,&CMainWindow::SlotUnFlaggation);
         }
     }
 
@@ -103,6 +116,9 @@ void CMainWindow::fnCreateGrid()
 
     m_uiRevealedSquares = 0;
     m_uiFlaggedSquares = 0;
+
+    emit SigSupposedMinesLeft(m_poConfiguration->fnGetNumberOfMines()-m_uiFlaggedSquares);
+    emit SigResetTimer();
 
     trace_debug("End of the grid creation");
 }
@@ -152,10 +168,11 @@ void CMainWindow::fnSetSizeFromConfiguration()
     uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
     uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
     uint32_t uiLength = C_SIZE_SQUARE * uiNumberOfColumn;
-    uint32_t uiHight = m_uiHightMenuBar + C_SIZE_SQUARE * uiNumberOfRow;
+    uint32_t uiHight = m_uiHightMenuBar + C_INFO_BAR_HIGHT + C_SIZE_SQUARE * uiNumberOfRow;
     trace_info("Size of the window = " << uiLength << "x" << uiHight );
     this->setFixedSize(uiLength, uiHight);
     m_poMenuBar->fnSetLength(uiLength);
+    m_poInfoBar->fnSetLength(uiLength);
 }
 
 void CMainWindow::SlotInMenuBar(EMenuBarPossibility eInputMenuBar)
@@ -210,8 +227,7 @@ You don't have to mark all the bombs to win; you just need to open all non-bomb 
                                                       strHelpText,
                                                       QMessageBox::Ok,
                                                       this);
-            //poQMesgBox->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-poQMesgBox->setFixedWidth(100);
+
             poQMesgBox->exec();
             delete poQMesgBox;
         }
@@ -226,6 +242,7 @@ void CMainWindow::SlotGameLoss()
     uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
     uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
     trace_info("Game lost");
+    emit SigStopTimer();
     // Freeze the squares
     for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
     {
@@ -245,17 +262,57 @@ void CMainWindow::SlotRevelation()
 
 void CMainWindow::SlotFlaggation()
 {
+    trace_debug("Square Flaggation");
     ++m_uiFlaggedSquares;
     trace_debug("Squares Flagged : " << m_uiFlaggedSquares);
     fnCheckWin();
+
+    emit SigSupposedMinesLeft(m_poConfiguration->fnGetNumberOfMines()-m_uiFlaggedSquares);
+}
+
+void CMainWindow::SlotUnFlaggation()
+{
+    trace_debug("Square UnFlaggation");
+    --m_uiFlaggedSquares;
+    trace_debug("Squares Flagged : " << m_uiFlaggedSquares);
+    fnCheckWin();
+
+    emit SigSupposedMinesLeft(m_poConfiguration->fnGetNumberOfMines()-m_uiFlaggedSquares);
 }
 
 void  CMainWindow::fnCheckWin()
 {
+    uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
+    // win without flagging
     if(m_uiRevealedSquares == \
             (m_poConfiguration->fnGetNumberOfRow()*m_poConfiguration->fnGetNumberOfColumn()-m_poConfiguration->fnGetNumberOfMines()))
     {
         fnWin();
+    }
+    // Win with flaggs
+    if (!(m_poConfiguration->fnGetNumberOfMines()-m_uiFlaggedSquares))
+    {
+        // If the number of squares flaged is exactly the same as the number of mines
+        bool bGoodFlagging = true;
+        for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
+        {
+            for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
+            {
+                if(m_poGrid[iI][iJ]->fnIsFlagged())
+                {
+                    bGoodFlagging &= m_poGrid[iI][iJ]->fnIsBomb();
+                }
+            }
+        }
+        if (bGoodFlagging)
+        {
+            fnWin();
+        }
+        else
+        {
+            trace_debug("Fake Flags");
+        }
     }
 }
 
@@ -263,7 +320,9 @@ void  CMainWindow::fnWin()
 {
     uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
     uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
+    int iTimer = m_poInfoBar->fnGetTimer();
     trace_info("Game Won !");
+    emit SigStopTimer();
     // Freeze the squares
     for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
     {
@@ -272,4 +331,12 @@ void  CMainWindow::fnWin()
             m_poGrid[iI][iJ]->fnfreeze();
         }
     }
+
+    QString strWinText = "You Win !!!!\nin " + QString::number(iTimer) +" seconds";
+    QMessageBox *poWinMsg = new QMessageBox(QMessageBox::Information,
+                                            "Win",
+                                            strWinText,
+                                            QMessageBox::Ok,
+                                            this);
+    poWinMsg->exec();
 }
