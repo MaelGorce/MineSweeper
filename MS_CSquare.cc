@@ -42,7 +42,18 @@ CSquare::CSquare(uint32_t uiXPos, uint32_t uiYPos, bool bIsBomb, uint32_t uiVert
     this->setAutoFillBackground(true);
     this->setCursor(Qt::PointingHandCursor);
 
+    QFont oFont;
+    oFont = this->font();
+    oFont.setBold(true);
+    oFont.setPointSize(C_POINT_SIZE);
+    this->setFont(oFont);
+
     QObject::connect(this, SIGNAL(clicked()), this, SLOT(fnTry()));
+
+    // using custom context menu button to flag : right click on Windows
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(this, SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(fnFlag()));
+
 }
 
 void CSquare::fnSetNeighborhoodInfos(CSquare** poNeighborhood)
@@ -79,7 +90,15 @@ void CSquare::fnTry()
         trace_debug("Trying [" << m_uiXPos << "][" << m_uiYPos << "]");
         if (m_bIsBomb)
         {
+            QPalette oPalette;
+
             trace_debug("IT'S A BOMB");
+            // colouring in red the bomb we tryed on
+            this->setAutoFillBackground(true);
+            this->setFlat(true);
+            oPalette = this->palette();
+            oPalette.setColor(QPalette::Button,Qt::red);
+            this->setPalette(oPalette);
             fnColouringRevelation();
             emit SigExplosion();
         }
@@ -171,9 +190,5 @@ void CSquare::fnColouringRevelation()
         this->setText("*");
     }
 
-    oFont = this->font();
-    oFont.setBold(true);
-    oFont.setPointSize(C_POINT_SIZE);
-    this->setFont(oFont);
     this->show();
 }

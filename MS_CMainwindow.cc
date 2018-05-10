@@ -3,13 +3,11 @@
 #include <QMessageBox>
 
 CMainWindow::CMainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent,Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint)
 {
     trace_debug("Construction of MainWindow");
 
     m_poConfiguration = new CConfiguration();
-    m_poOldConfiguration = new CConfiguration();
-    *m_poOldConfiguration = *m_poConfiguration;
 
     m_poMenuBar = new CMenuBar(this);
     connect(m_poMenuBar,&CMenuBar::SigOutMenuBar,
@@ -39,8 +37,8 @@ CMainWindow::~CMainWindow()
 void CMainWindow::fnDeleteOldGrid()
 {
     trace_debug("Deleting Old Grid");
-    uint32_t uiNumberOfColumn = m_poOldConfiguration->fnGetNumberOfColumn();
-    uint32_t uiNumberOfRow = m_poOldConfiguration->fnGetNumberOfRow();
+    uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
 
     for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
     {
@@ -165,18 +163,29 @@ void CMainWindow::SlotInMenuBar(EMenuBarPossibility eInputMenuBar)
     switch (eInputMenuBar)
     {
         case ENewGame:
-            trace_debug("New Game");
+            trace_info("New Game");
             fnDeleteOldGrid();
             fnCreateGrid();
             this->show();
             break;
         case EPreferences:
-            trace_debug("Preferences");
-            m_poConfiguration->fnConfigure(this);
+        {
+        int iReturnedExec=0;
+            trace_info("Preferences");
+            iReturnedExec = m_poConfiguration->fnConfigure(this);
+            if (QMessageBox::Apply == iReturnedExec)
+            {
+                fnDeleteOldGrid();
+                m_poConfiguration->fnUpdateConfiguration();
+                fnSetSizeFromConfiguration();
+                fnCreateGrid();
+                this->show();
+            }
+        }
             break;
         case EHelp:
         {
-            trace_debug("Help");
+            trace_info("Help");
             const QString strHelpText =
 "Quick Start:\n \
 \n \
@@ -186,7 +195,7 @@ If you click on a square containing a bomb, you lose. If you manage to click all
 Use this information plus some guess work to avoid the bombs.\n\
 *\tTo open a square, point at the square and click on it. To mark a square you think is a bomb, point and right-click.\n\
 \n\
-\bDetailed Instructions:\b\n\
+Detailed Instructions:\n\
 \n\
 A squares \"neighbours\" are the squares adjacent above, below, left, right, and all 4 diagonals.\n\
 Squares on the sides of the board or in a corner have fewer neighbors. The board does not wrap around the edges.\n\
@@ -201,8 +210,8 @@ You don't have to mark all the bombs to win; you just need to open all non-bomb 
                                                       strHelpText,
                                                       QMessageBox::Ok,
                                                       this);
-            poQMesgBox->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-
+            //poQMesgBox->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+poQMesgBox->setFixedWidth(100);
             poQMesgBox->exec();
             delete poQMesgBox;
         }
@@ -214,8 +223,8 @@ You don't have to mark all the bombs to win; you just need to open all non-bomb 
 
 void CMainWindow::SlotGameLoss()
 {
-    uint32_t uiNumberOfColumn = m_poOldConfiguration->fnGetNumberOfColumn();
-    uint32_t uiNumberOfRow = m_poOldConfiguration->fnGetNumberOfRow();
+    uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
     trace_info("Game lost");
     // Freeze the squares
     for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
@@ -244,7 +253,7 @@ void CMainWindow::SlotFlaggation()
 void  CMainWindow::fnCheckWin()
 {
     if(m_uiRevealedSquares == \
-            (m_poOldConfiguration->fnGetNumberOfRow()*m_poOldConfiguration->fnGetNumberOfColumn()-m_poOldConfiguration->fnGetNumberOfMines()))
+            (m_poConfiguration->fnGetNumberOfRow()*m_poConfiguration->fnGetNumberOfColumn()-m_poConfiguration->fnGetNumberOfMines()))
     {
         fnWin();
     }
@@ -252,8 +261,8 @@ void  CMainWindow::fnCheckWin()
 
 void  CMainWindow::fnWin()
 {
-    uint32_t uiNumberOfColumn = m_poOldConfiguration->fnGetNumberOfColumn();
-    uint32_t uiNumberOfRow = m_poOldConfiguration->fnGetNumberOfRow();
+    uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
     trace_info("Game Won !");
     // Freeze the squares
     for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)

@@ -33,7 +33,6 @@ private:
     CMenuBar* m_poMenuBar;
     uint32_t m_uiHightMenuBar;
     CConfiguration* m_poConfiguration;
-    CConfiguration* m_poOldConfiguration;
     CSquare* m_poGrid[C_MAX_SIZE_NUMBER][C_MAX_SIZE_NUMBER];
     bool m_pbBombGrid[C_MAX_SIZE_NUMBER][C_MAX_SIZE_NUMBER];
 
