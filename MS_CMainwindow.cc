@@ -29,8 +29,6 @@ CMainWindow::CMainWindow(QWidget *parent)
 
     fnCreateGrid();
 
-    fnSetSizeFromConfiguration();
-
     trace_debug("End Construction of MainWindow");
 }
 
@@ -302,16 +300,18 @@ void  CMainWindow::fnCheckWin()
                 if(m_poGrid[iI][iJ]->fnIsFlagged())
                 {
                     bGoodFlagging &= m_poGrid[iI][iJ]->fnIsBomb();
+                    trace_info("bGoodFlagging | IsFlagged | IsBomb | [iI][iJ] : " << bGoodFlagging << " | " << m_poGrid[iI][iJ]->fnIsFlagged() << " | " << m_poGrid[iI][iJ]->fnIsBomb() << " | [" << iI << "][" << iJ << "]");
                 }
             }
         }
         if (bGoodFlagging)
         {
+            trace_info("Win with flags");
             fnWin();
         }
         else
         {
-            trace_debug("Fake Flags");
+            trace_info("Fake Flags");
         }
     }
 }

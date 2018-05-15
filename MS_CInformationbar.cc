@@ -31,9 +31,12 @@ void CInformationBar::fnSetLength(uint32_t uiLenght)
 {
     trace_debug("Setting Info bar Width to : "<< uiLenght)
     this->setFixedWidth(uiLenght);
+    this->show();
     m_poLCDTime->move(uiLenght-m_poLCDTime->width(),0);
     m_poLCDTime->show();
-    this->show();
+    // FIXME : need to double it for the first lauch : it's not at the rightest place
+    m_poLCDTime->move(uiLenght-m_poLCDTime->width(),0);
+    m_poLCDTime->show();
 }
 
 int CInformationBar::fnGetTimer()

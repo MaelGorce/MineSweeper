@@ -127,22 +127,22 @@ void CSquare::fnTry()
 
 void CSquare::fnFlag()
 {
-    if (!m_bIsRevealed && !m_bIsFlagged)
+    if (!m_bIsRevealed && !m_bIsFlagged && !m_bIsQuestionMarked)
     {
         trace_info("Flagging [" << m_uiXPos << "][" << m_uiYPos << "]");
-        emit SigFlagged();
         m_bIsFlagged = true;
         this->setText("F");
         this->show();
+        emit SigFlagged();
     }
     else if (m_bIsFlagged)
     {
         trace_info("Question Marking [" << m_uiXPos << "][" << m_uiYPos << "]");
-        emit SigUnFlagged();
         m_bIsFlagged = false;
         m_bIsQuestionMarked = true;
         this->setText("?");
         this->show();
+        emit SigUnFlagged();
     }
     else if (m_bIsQuestionMarked)
     {
