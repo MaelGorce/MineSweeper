@@ -17,6 +17,7 @@ public:
 
 public slots:
     void SlotInMenuBar(EMenuBarPossibility);
+    void SlotStartingGame(QPoint QStart);
     void SlotGameLoss();
     void SlotRevelation();
     void SlotFlaggation();
@@ -24,7 +25,7 @@ public slots:
 
 signals:
     void SigSupposedMinesLeft(int32_t);
-    void SigResetTimer();
+    void SigResetTimer(bool bStartTimer);
     void SigStopTimer();
 
 private:

@@ -67,13 +67,17 @@ void CInformationBar::SlotSupposedMinesLeft(int iSupposedMinesLeft)
     m_poLCDMinesLeft->setPalette(oPalette);
 }
 
-void CInformationBar::SlotResetTimer()
+void CInformationBar::SlotResetTimer(bool bStartTimer)
 {
     trace_debug("Resetting Timer");
     m_poLCDTime->display(0);
     m_iNbSecondTimer = 0;
     m_poTimer->stop();
-    m_poTimer->start(1000);
+    if (bStartTimer)
+    {
+        m_poTimer->start(1000);
+    }
+
 }
 
 void CInformationBar::SlotStopTimer()

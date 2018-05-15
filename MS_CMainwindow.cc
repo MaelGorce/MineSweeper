@@ -63,8 +63,6 @@ void CMainWindow::fnCreateGrid()
 {
     trace_debug("Creating Grid");
 
-    fnRamdomBombImplant();
-
     uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
     uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
 
@@ -73,34 +71,7 @@ void CMainWindow::fnCreateGrid()
         for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
         {
             m_poGrid[iI][iJ] = new CSquare(iI,iJ,m_pbBombGrid[iI][iJ],m_uiHightMenuBar+m_uiHightInfoBar,this);
-            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigExplosion,this,&CMainWindow::SlotGameLoss);
-            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigRevealed,this,&CMainWindow::SlotRevelation);
-            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigFlagged,this,&CMainWindow::SlotFlaggation);
-            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigUnFlagged,this,&CMainWindow::SlotUnFlaggation);
-        }
-    }
-
-    trace_debug("Neighbooring the Grid");
-
-    CSquare* pCNeighboors[C_NB_OF_NEIGHBORS];
-    int pucVoisCorrX[C_NB_OF_NEIGHBORS] = {-1,0,1,-1,1,-1,0,1};
-    int pucVoisCorrY[C_NB_OF_NEIGHBORS] = {-1,-1,-1,0,0,1,1,1};
-
-    trace_debug("Beginning of the neighbooring");
-    for(int32_t iI=0; iI < (int)uiNumberOfColumn;++iI)
-    {
-        for(int32_t iJ=0; iJ < (int)uiNumberOfRow;++iJ)
-        {
-            for(int32_t iN=0; iN < C_NB_OF_NEIGHBORS;++iN)
-                {
-                    (iI+pucVoisCorrX[iN]>=0 &&                                                \
-                     iI+pucVoisCorrX[iN]< (int)uiNumberOfColumn &&                            \
-                     iJ+pucVoisCorrY[iN]>=0 &&                                                \
-                     iJ+pucVoisCorrY[iN]< (int)uiNumberOfRow ) ?                              \
-                     pCNeighboors[iN]=m_poGrid[iI+pucVoisCorrX[iN]][iJ+pucVoisCorrY[iN]] :    \
-                     pCNeighboors[iN]=nullptr;
-                }
-            m_poGrid[iI][iJ]->fnSetNeighborhoodInfos(pCNeighboors);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigClicked,this,&CMainWindow::SlotStartingGame);
         }
     }
 
@@ -115,8 +86,9 @@ void CMainWindow::fnCreateGrid()
     m_uiRevealedSquares = 0;
     m_uiFlaggedSquares = 0;
 
+    // Reset Timer without launching it
+    m_poInfoBar->SlotResetTimer(false);
     emit SigSupposedMinesLeft(m_poConfiguration->fnGetNumberOfMines()-m_uiFlaggedSquares);
-    emit SigResetTimer();
 
     trace_debug("End of the grid creation");
 }
@@ -233,6 +205,68 @@ You don't have to mark all the bombs to win; you just need to open all non-bomb 
         default:
             trace_debug("Case " << eInputMenuBar << " causes no action here");
     }
+}
+
+void CMainWindow::SlotStartingGame(QPoint QStart)
+{
+    trace_info("Game Starting from : [" << QStart.x() << "][" <<QStart.y() << "]" );
+
+    fnRamdomBombImplant();
+    while (m_pbBombGrid[QStart.x()][QStart.y()] == true)
+    {
+        // We create Random Implant of bomb untill the square we started on is not a bomb
+        fnRamdomBombImplant();
+    }
+
+    trace_debug("Launching Grid");
+
+    uint32_t uiNumberOfColumn = m_poConfiguration->fnGetNumberOfColumn();
+    uint32_t uiNumberOfRow = m_poConfiguration->fnGetNumberOfRow();
+
+    for(uint32_t iI=0; iI <uiNumberOfColumn;++iI)
+    {
+        for(uint32_t iJ=0; iJ <uiNumberOfRow;++iJ)
+        {
+            m_poGrid[iI][iJ]->fnSetIsBomb(m_pbBombGrid[iI][iJ]);
+            QObject::disconnect(m_poGrid[iI][iJ], &CSquare::SigClicked, 0, 0);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigExplosion,this,&CMainWindow::SlotGameLoss);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigRevealed,this,&CMainWindow::SlotRevelation);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigFlagged,this,&CMainWindow::SlotFlaggation);
+            QObject::connect(m_poGrid[iI][iJ],&CSquare::SigUnFlagged,this,&CMainWindow::SlotUnFlaggation);
+        }
+    }
+
+    trace_debug("Neighbooring the Grid");
+
+    CSquare* pCNeighboors[C_NB_OF_NEIGHBORS];
+    int pucVoisCorrX[C_NB_OF_NEIGHBORS] = {-1,0,1,-1,1,-1,0,1};
+    int pucVoisCorrY[C_NB_OF_NEIGHBORS] = {-1,-1,-1,0,0,1,1,1};
+
+    trace_debug("Beginning of the neighbooring");
+    for(int32_t iI=0; iI < (int)uiNumberOfColumn;++iI)
+    {
+        for(int32_t iJ=0; iJ < (int)uiNumberOfRow;++iJ)
+        {
+            for(int32_t iN=0; iN < C_NB_OF_NEIGHBORS;++iN)
+                {
+                    (iI+pucVoisCorrX[iN]>=0 &&                                                \
+                     iI+pucVoisCorrX[iN]< (int)uiNumberOfColumn &&                            \
+                     iJ+pucVoisCorrY[iN]>=0 &&                                                \
+                     iJ+pucVoisCorrY[iN]< (int)uiNumberOfRow ) ?                              \
+                     pCNeighboors[iN]=m_poGrid[iI+pucVoisCorrX[iN]][iJ+pucVoisCorrY[iN]] :    \
+                     pCNeighboors[iN]=nullptr;
+                }
+            m_poGrid[iI][iJ]->fnSetNeighborhoodInfos(pCNeighboors);
+        }
+    }
+
+
+    m_poGrid[QStart.x()][QStart.y()]->fnTry();
+    emit SigSupposedMinesLeft(m_poConfiguration->fnGetNumberOfMines()-m_uiFlaggedSquares);
+    emit SigResetTimer(true);
+
+    trace_debug("Game Started");
+
 }
 
 void CMainWindow::SlotGameLoss()

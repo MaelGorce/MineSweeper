@@ -13,6 +13,7 @@ class CSquare: public QPushButton
 public:
     CSquare(uint32_t uiXPos, uint32_t uiYPos, bool bIsBomb, uint32_t uiVerticalOffset, QWidget *parent);
     void fnSetNeighborhoodInfos(CSquare** poNeighborhood);
+    void fnSetIsBomb(const bool bIsBomb);
     bool fnIsBomb()const;
     bool fnIsRevealed()const;
     bool fnIsFlagged()const;
@@ -20,11 +21,13 @@ public:
     void fnfreeze();
     void fnDistantTry();
 
-private slots:
+public slots:
+    void fnFirstClick();
     void fnTry();
     void fnFlag();
 
 signals:
+    void SigClicked(QPoint QStart);
     void SigExplosion();
     void SigFlagged();
     void SigUnFlagged();

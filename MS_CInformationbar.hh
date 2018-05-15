@@ -20,7 +20,7 @@ signals:
 
 public slots:
     void SlotSupposedMinesLeft(int iSupposedMinesLeft);
-    void SlotResetTimer();
+    void SlotResetTimer(bool bStartTimer);
     void SlotStopTimer();
 
 private slots:

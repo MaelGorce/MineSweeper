@@ -50,15 +50,11 @@ CSquare::CSquare(uint32_t uiXPos, uint32_t uiYPos, bool bIsBomb, uint32_t uiVert
     oFont.setPointSize(C_POINT_SIZE);
     this->setFont(oFont);
 
-    QObject::connect(this, SIGNAL(clicked()), this, SLOT(fnTry()));
-
-    // using custom context menu button to flag : right click on Windows
-    this->setContextMenuPolicy(Qt::CustomContextMenu);
-    QObject::connect(this, SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(fnFlag()));
+    QObject::connect(this, SIGNAL(clicked()), this, SLOT(fnFirstClick()));
 
 }
 
-void CSquare::fnSetNeighborhoodInfos(CSquare** poNeighborhood)
+void CSquare::fnSetNeighborhoodInfos(CSquare **poNeighborhood)
 {
     m_uiNbOfSurrondingBomb = 0;
     for(int iI=0; iI < C_NB_OF_NEIGHBORS;iI++)
@@ -73,6 +69,17 @@ void CSquare::fnSetNeighborhoodInfos(CSquare** poNeighborhood)
         }
 
     }
+    QObject::disconnect(this, SIGNAL(clicked()), this, SLOT(fnFirstClick()));
+    QObject::connect(this, SIGNAL(clicked()), this, SLOT(fnTry()));
+
+    // using custom context menu button to flag : right click on Windows
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(this, SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(fnFlag()));
+}
+
+void CSquare::fnSetIsBomb(const bool bIsBomb)
+{
+    m_bIsBomb = bIsBomb;
 }
 
 bool CSquare::fnIsBomb()const
@@ -93,6 +100,12 @@ bool CSquare::fnIsFlagged()const
 bool CSquare::fnIsQuestionMarked()const
 {
     return m_bIsQuestionMarked;
+}
+
+void CSquare::fnFirstClick()
+{
+    QPoint QStart(m_uiXPos,m_uiYPos);
+    emit SigClicked(QStart);
 }
 
 void CSquare::fnTry()
