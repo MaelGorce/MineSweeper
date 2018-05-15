@@ -20,6 +20,7 @@ public:
     CMenuBar(QWidget *parent = nullptr);
     ~CMenuBar();
 
+    void fnSetLength(uint32_t uiLenght);
 signals:
     void SigOutMenuBar(EMenuBarPossibility);
 
@@ -32,6 +33,7 @@ private:
     void fnCreateActions();
     void fnCreateMenus();
 
+    uint32_t m_uiLenght;
     QMenu * m_pQMenuFile;
     QMenu * m_pQMenuHelp;
     QAction* m_pQActionVector [EMaxMenuBarPossibility];
